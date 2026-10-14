@@ -1,0 +1,134 @@
+import os
+import shutil
+import datetime
+import threading
+import tkinter as tk
+from tkinter import ttk
+from tkinter import messagebox
+
+# criando a janela principal (invisível)
+root = tk.Tk()
+root.withdraw()
+
+# definindo o caminho do disco externo
+hd_path = "E:\\"
+
+# loop para verificar se o disco externo está conectado
+while True:
+    if os.path.exists(hd_path):
+        
+        # buscando todas as pastas que contém "Backup" e "2023" no nome
+        caminho = "E:/"
+        pastas = []
+        for root, dirs, files in os.walk(caminho):
+            for dir in dirs:
+                if "Backup" in dir and "2023" in dir:
+                    pastas.append(os.path.join(root, dir))
+
+        # ordenando a lista de pastas pela data de modificação
+        pastas.sort(key=lambda x: os.path.getmtime(x))
+
+        # exibindo a pasta mais antiga e perguntando se deseja excluir
+        if pastas:
+            pasta_antiga = pastas[0]
+            mensagem = f"Para Liberar espaço no disco, deseja excluir a pasta de backup antiga:\n\n{pasta_antiga}\n\nClique em 'Sim' para excluir ou 'Não' para cancelar."
+            resposta_exclusao = messagebox.askquestion("HD Conectado", mensagem, icon="warning")
+
+            if resposta_exclusao == "yes":
+                # excluindo a pasta e exibindo mensagem de conclusão da exclusão
+                shutil.rmtree(pasta_antiga)
+                messagebox.showinfo("Excluir Pasta", f"A pasta {pasta_antiga} foi excluída com sucesso.")
+        else:
+            messagebox.showinfo("Excluir Pasta", "Não foram encontradas pastas para excluir.")
+        
+       
+        
+        # exibindo mensagem de confirmação para backup
+        resposta_backup = messagebox.askquestion("HD Conectado", "Deseja iniciar o backup?")
+        
+        if resposta_backup == 'yes':
+            # realizando o backup
+            data_atual = datetime.datetime.now().strftime('%d-%m-%Y')
+            nome_pasta = f'Backup_{data_atual}'
+            caminho_pasta = os.path.join(hd_path, nome_pasta)
+            os.makedirs(caminho_pasta, exist_ok=True)
+
+            origem = r"\\192.168.0.100\consinco\testepython"
+            destino = caminho_pasta
+            
+
+            # copiando os arquivos e atualizando a barra de progresso
+            def copiar_arquivos(origem, destino, barra, total_arquivos, janela):
+                i = 0
+                for root, dirs, files in os.walk(origem):
+                    for file in files:
+                        try:
+                            shutil.copy(os.path.join(root, file), os.path.join(destino, os.path.relpath(os.path.join(root, file), origem)))
+                        except Exception as e:
+                            print(f"Erro ao copiar o arquivo {file}. Erro: {e}")
+            
+                        # atualizando a barra de progresso
+                        i += 1
+                        porcentagem = i / total_arquivos * 100
+                        barra["value"] = porcentagem
+                        janela.update()
+                        
+                        # exibindo mensagem de conclusão do backup
+                        messagebox.showinfo("Backup Concluído", "O backup foi concluído com sucesso.")
+                        janela.destroy()
+                        
+            
+                        # verificando se o botão de cancelar foi pressionado
+                        if cancelar_operacao:
+                            messagebox.showinfo("Operação Cancelada", "A operação foi cancelada pelo usuário.")
+                            janela.destroy()
+                            return
+
+
+            # função que cancela a operação
+            def cancelar():
+                global cancelar_operacao
+                cancelar_operacao = True
+
+            # criando a janela
+            janela = tk.Tk()
+            janela.title("Backup em andamento")
+            janela.geometry("300x130")
+
+            # criando a barra de progresso
+            barra = ttk.Progressbar(janela, orient="horizontal", length=200, mode="determinate")
+            barra.pack(pady=10)
+
+            # criando o botão de cancelar
+            btn_cancelar = tk.Button(janela, text="Cancelar", command=cancelar)
+            btn_cancelar.pack(pady=5)
+
+            # contando o número total de arquivos
+            total_arquivos = 0
+            for root, dirs, files in os.walk(origem):
+                total_arquivos += len(files)
+
+            # variável global que indica se a operação deve ser cancelada
+            global cancelar_operacao
+            cancelar_operacao = False
+            
+
+            # criando thread para a cópia dos arquivos
+            thread = threading.Thread(target=copiar_arquivos, args=(origem, destino, barra, total_arquivos, janela))
+            thread.start()
+
+            #iniciando a janela
+            janela.mainloop()
+            
+            
+            
+            
+             # finalizando o loop
+        break
+
+        
+    # esperando um tempo para verificar novamente se o disco externo foi conectado
+    root.after(5)
+
+# finalizando a janela principal
+root.destroy()

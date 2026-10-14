@@ -1,0 +1,13 @@
+Programa EXE executa por meio do agendador de tarefas do windows as 07:00 diariamente
+
+Programa identifica se existe disco removivel (HD ou Pendrive) conectado como disco local D = D://
+Se não tiver conectado ele não executa o comando
+
+Programa idenfica as pastas mais antigas no disco removivel com os criterios no nome da pasta "Backup" e "2023"
+A verificação é feita por meio da data da criação da pasta e não pelo nome para evitar erros
+
+Principal beneficio, segundo varios testes realizados, o backup feito não prejudica o desempenho do computador
+hospedeiro, a copia dos arquivos também tem peso inferior na rede comparado com a forma original de copia
+
+No final do processo é apresentado a mensagem de conclução que não precisa ser clicada, o foi configurado autokill
+no agendador de tarefas do windowns as 19:00

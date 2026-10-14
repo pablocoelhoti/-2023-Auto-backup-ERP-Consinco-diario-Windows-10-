@@ -1,0 +1,25 @@
+import os
+import shutil
+from datetime import datetime
+from tkinter import messagebox, Tk
+
+# Verifica se o disco externo está conectado
+if os.path.exists("E:"):
+    # Pergunta ao usuário se deseja apagar a pasta "Backup" antiga
+    if messagebox.askyesno("Apagar pasta antiga", "Deseja apagar a pasta 'Backup' antiga?"):
+        shutil.rmtree("E:\\Backup") # Apaga a pasta "Backup" antiga
+        
+    # Cria a pasta "Backup semanal"
+    data_atual = datetime.now().strftime('%Y-%m-%d')
+    pasta_backup = f"E:\\Backup semanal\\Backup semanal {data_atual}"
+    os.makedirs(pasta_backup, exist_ok=True)
+    
+    # Cria as subpastas
+    subpastas = ["Alterdata", "Unifi", "MGV", "GLPI"]
+    for subpasta in subpastas:
+        os.makedirs(os.path.join(pasta_backup, subpasta), exist_ok=True)
+else:
+    # Exibe uma mensagem de erro caso o disco externo não esteja conectado
+    root = Tk()
+    root.withdraw()
+    messagebox.showerror("Erro", "O disco externo não está conectado.")
